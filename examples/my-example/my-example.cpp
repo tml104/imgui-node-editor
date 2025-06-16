@@ -21,6 +21,10 @@
 # include <imgui_internal.h>
 # include <imgui_node_editor.h>
 # include <application.h>
+#include <iostream>
+#include <fstream>
+#include <json.hpp>
+
 
 namespace ed = ax::NodeEditor;
 
@@ -44,15 +48,78 @@ struct Example:
         ed::PinId  OutputId;
     };
 
+	void LoadLinks()
+	{
+		// 这里可以加载链接信息
+		// 例如从JSON文件中读取链接数据，然后填充到m_Links中
+		// 目前先留空，之后可以实现
+
+
+        using json = nlohmann::json;
+        std::ifstream f("MyLinks.json");
+		if (!f.is_open())
+		{
+			std::cerr << "Failed to open MyLinks.json" << std::endl;
+			return;
+		}
+
+		json j;
+		f >> j;
+		for (const auto& link : j["links"])
+		{
+			LinkInfo info;
+			info.Id = ed::LinkId(link["id"].get<int>());
+			info.InputId = ed::PinId(link["input_id"].get<int>());
+			info.OutputId = ed::PinId(link["output_id"].get<int>());
+			m_Links.push_back(info);
+		}
+		f.close();
+	}
+
+    void SaveLinks()
+    {
+        using json = nlohmann::json;
+
+        json j;
+
+
+		for (const auto& link : m_Links)
+		{
+			j["links"].push_back({
+				{"id", link.Id.Get()},
+				{"input_id", link.InputId.Get()},
+				{"output_id", link.OutputId.Get()}
+				});
+		}
+
+		std::ofstream f("MyLinks.json");
+		if (!f.is_open())
+		{
+			std::cerr << "Failed to open MyLinks.json for writing" << std::endl;
+			return;
+		}
+		f << j.dump(4); // Pretty print with 4 spaces
+		f.close();
+
+    }
+
     void OnStart() override
     {
         ed::Config config;
-        config.SettingsFile = "Widgets.json";
+
+        config.SettingsFile = "My.json"; // TEMP: m_Name是private导致这里不能直接根据名字读写json，之后可能要改（现在先硬编码）
         m_Context = ed::CreateEditor(&config);
+
+        ed::SetCurrentEditor(m_Context);
+
+        // 加载节点links
+        LoadLinks();
     }
 
     void OnStop() override
     {
+        SaveLinks();
+
         ed::DestroyEditor(m_Context);
     }
 
@@ -213,10 +280,10 @@ struct Example:
                 ImGui::EndColumns();
             ed::EndNode(); // End of Tree Node Demo
 
-            if (firstframe)
-            {
-                ed::SetNodePosition(header_id, ImVec2(420, 20));
-            }
+            //if (firstframe)
+            //{
+            //    ed::SetNodePosition(header_id, ImVec2(420, 20));
+            //}
 
             // Tool Tip & Pop-up Demo =====================================================================================
             // Tooltips, combo-boxes, drop-down menus need to use a work-around to place the "overlay window" in the canvas.
@@ -256,9 +323,9 @@ struct Example:
                     do_popup = true;	// Instead of saying OpenPopup() here, we set this bool, which is used later in the Deferred Pop-up Section
                 }
             ed::EndNode();
-            if (firstframe) {
-                ed::SetNodePosition(popup_id, ImVec2(610, 20));
-            }
+            //if (firstframe) {
+            //    ed::SetNodePosition(popup_id, ImVec2(610, 20));
+            //}
 
             // --------------------------------------------------------------------------------------------------
             // Deferred Pop-up Section
@@ -356,9 +423,9 @@ struct Example:
 
                 ImGui::PopItemWidth();
             ed::EndNode();
-            if (firstframe) {
-                ed::SetNodePosition(plot_id, ImVec2(850, 20));
-            }
+            //if (firstframe) {
+            //    ed::SetNodePosition(plot_id, ImVec2(850, 20));
+            //}
             // ==================================================================================================
             // Link Drawing Section
 
