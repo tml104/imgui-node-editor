@@ -890,7 +890,7 @@ struct Example:
 
     void OnFrame(float deltaTime) override
     {
-        UpdateTouch();
+        UpdateTouch(); // Touch ÊÇ¸öÉ¶
 
         auto& io = ImGui::GetIO();
 

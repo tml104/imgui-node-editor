@@ -1,4 +1,4 @@
-﻿// ===================================================================================================================
+// ===================================================================================================================
 // Widget Example
 // Drawing standard ImGui widgets inside the node body
 //
@@ -423,7 +423,7 @@ struct Example:
 
 int Main(int argc, char** argv)
 {
-    Example exampe("Widgets", argc, argv);
+    Example exampe("My", argc, argv);
 
     if (exampe.Create())
         return exampe.Run();

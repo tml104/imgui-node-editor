@@ -13,7 +13,7 @@ struct Example:
     {
         ed::Config config;
         config.SettingsFile = "Simple.json";
-        m_Context = ed::CreateEditor(&config);
+        m_Context = ed::CreateEditor(&config); // 这个是用来保存元素位置用的，这个例子里面并没有涉及到连接之类的保存等
     }
 
     void OnStop() override

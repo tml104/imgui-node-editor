@@ -160,7 +160,7 @@ struct Example:
         // Handle deletion action
         if (ed::BeginDelete())
         {
-            // There may be many links marked for deletion, let's loop over them.
+            // There may be many links marked for deletion, let's loop over them. （这是循环的原因）
             ed::LinkId deletedLinkId;
             while (ed::QueryDeletedLink(&deletedLinkId))
             {
