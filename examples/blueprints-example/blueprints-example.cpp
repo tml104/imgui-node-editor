@@ -361,6 +361,7 @@ struct Example:
         m_Nodes.back().Inputs.emplace_back(GetNextId(), "Time", PinType::Float);
         m_Nodes.back().Inputs.emplace_back(GetNextId(), "Looping", PinType::Bool);
         m_Nodes.back().Outputs.emplace_back(GetNextId(), "", PinType::Flow);
+        m_Nodes.back().Outputs.emplace_back(GetNextId(), "String Output", PinType::String);
 
         BuildNode(&m_Nodes.back());
 
@@ -705,10 +706,11 @@ struct Example:
     {
         auto& io = ImGui::GetIO();
 
-        ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
+        ImGui::BeginChild("Selection", ImVec2(paneWidth, 0)); // ImGui::BeginChild 的作用是创建一个子窗口或者说一个独立的区域，后续在该区域内绘制的所有 ImGui 控件（如文本、按钮、列表项等）都将在这个子区域中进行布局和渲染。所有在其后直到 ImGui::EndChild() 之间的 ImGui 绘制命令都会被限制在这个区域内。
 
         paneWidth = ImGui::GetContentRegionAvail().x;
 
+        // [Start] 顶上3按钮& Show Ordinals的checkbox
         static bool showStyleEditor = false;
         ImGui::BeginHorizontal("Style Editor", ImVec2(paneWidth, 0));
         ImGui::Spring(0.0f, 0.0f);
@@ -728,7 +730,10 @@ struct Example:
 
         if (showStyleEditor)
             ShowStyleEditor(&showStyleEditor);
+        // [End]
 
+		// [Start] 节点列表数据：通过ed::GetSelectedNodes和ed::GetSelectedLinks取得所有选中的节点和链接
+        // 至于节点列表，m_Nodes本就在维护这些信息
         std::vector<ed::NodeId> selectedNodes;
         std::vector<ed::LinkId> selectedLinks;
         selectedNodes.resize(ed::GetSelectedObjectCount());
@@ -748,10 +753,10 @@ struct Example:
         ImGui::GetWindowDrawList()->AddRectFilled(
             ImGui::GetCursorScreenPos(),
             ImGui::GetCursorScreenPos() + ImVec2(paneWidth, ImGui::GetTextLineHeight()),
-            ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f);
+			ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f); // 绘制蓝色的背景条
         ImGui::Spacing(); ImGui::SameLine();
         ImGui::TextUnformatted("Nodes");
-        ImGui::Indent();
+        ImGui::Indent(); // 让接下来的内容全部缩进
         for (auto& node : m_Nodes)
         {
             ImGui::PushID(node.ID.AsPointer());
@@ -762,23 +767,23 @@ struct Example:
                 ImGui::GetWindowDrawList()->AddLine(
                     start + ImVec2(-8, 0),
                     start + ImVec2(-8, ImGui::GetTextLineHeight()),
-                    IM_COL32(255, 0, 0, 255 - (int)(255 * progress)), 4.0f);
+					IM_COL32(255, 0, 0, 255 - (int)(255 * progress)), 4.0f); // 所以这个TouchProgress是用来绘制一个红色的线条，表示节点被触摸的进度。“被触摸”实际上是指节点被移动
             }
 
-            bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), node.ID) != selectedNodes.end();
+            bool isSelected = std::find(selectedNodes.begin(), selectedNodes.end(), node.ID) != selectedNodes.end(); // 若被选中，则会影响下面的节点绘制是否高亮
 # if IMGUI_VERSION_NUM >= 18967
             ImGui::SetNextItemAllowOverlap();
 # endif
-            if (ImGui::Selectable((node.Name + "##" + std::to_string(reinterpret_cast<uintptr_t>(node.ID.AsPointer()))).c_str(), &isSelected))
+            if (ImGui::Selectable((node.Name + "##" + std::to_string(reinterpret_cast<uintptr_t>(node.ID.AsPointer()))).c_str(), &isSelected)) // "##"后的部分会被视为节点标签。在这之前的部分会被展示，在这之后的部分会被隐藏
             {
-                if (io.KeyCtrl)
+                if (io.KeyCtrl) // 如果同时按下了ctrl键，那么处理多选的逻辑
                 {
                     if (isSelected)
                         ed::SelectNode(node.ID, true);
                     else
                         ed::DeselectNode(node.ID);
                 }
-                else
+                else // 否则仅处理单选逻辑
                     ed::SelectNode(node.ID, false);
 
                 ed::NavigateToSelection();
@@ -804,7 +809,7 @@ struct Example:
 # endif
             if (node.SavedState.empty())
             {
-                if (ImGui::InvisibleButton("save", ImVec2((float)saveIconWidth, (float)saveIconHeight)))
+                if (ImGui::InvisibleButton("save", ImVec2((float)saveIconWidth, (float)saveIconHeight))) // 保存节点状态（具体来说是位置）
                     node.SavedState = node.State;
 
                 if (ImGui::IsItemActive())
@@ -828,7 +833,7 @@ struct Example:
 # endif
             if (!node.SavedState.empty())
             {
-                if (ImGui::InvisibleButton("restore", ImVec2((float)restoreIconWidth, (float)restoreIconHeight)))
+                if (ImGui::InvisibleButton("restore", ImVec2((float)restoreIconWidth, (float)restoreIconHeight))) // 恢复节点状态（具体来说是位置）
                 {
                     node.State = node.SavedState;
                     ed::RestoreNodeState(node.ID);
@@ -860,10 +865,11 @@ struct Example:
 
         static int changeCount = 0;
 
+		// [Start] 选择的节点和链接信息的列表
         ImGui::GetWindowDrawList()->AddRectFilled(
             ImGui::GetCursorScreenPos(),
             ImGui::GetCursorScreenPos() + ImVec2(paneWidth, ImGui::GetTextLineHeight()),
-            ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f);
+			ImColor(ImGui::GetStyle().Colors[ImGuiCol_HeaderActive]), ImGui::GetTextLineHeight() * 0.25f); // 同上，画一个蓝色的背景条
         ImGui::Spacing(); ImGui::SameLine();
         ImGui::TextUnformatted("Selection");
 
@@ -877,12 +883,13 @@ struct Example:
         for (int i = 0; i < nodeCount; ++i) ImGui::Text("Node (%p)", selectedNodes[i].AsPointer());
         for (int i = 0; i < linkCount; ++i) ImGui::Text("Link (%p)", selectedLinks[i].AsPointer());
         ImGui::Unindent();
+        // [End]
 
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Z)))
             for (auto& link : m_Links)
                 ed::Flow(link.ID);
 
-        if (ed::HasSelectionChanged())
+        if (ed::HasSelectionChanged()) // 只是用来显示选择次数，没有实际意义
             ++changeCount;
 
         ImGui::EndChild();
@@ -890,7 +897,7 @@ struct Example:
 
     void OnFrame(float deltaTime) override
     {
-        UpdateTouch(); // Touch 是个啥
+        UpdateTouch(); // Touch 是个啥：如果移动了某个节点那么会更新各个节点的Touch值，这个值会用来在LeftPane中显示一条红色线
 
         auto& io = ImGui::GetIO();
 
@@ -921,7 +928,7 @@ struct Example:
         static float rightPaneWidth = 800.0f;
         Splitter(true, 4.0f, &leftPaneWidth, &rightPaneWidth, 50.0f, 50.0f);
 
-        ShowLeftPane(leftPaneWidth - 4.0f);
+        ShowLeftPane(leftPaneWidth - 4.0f); // 绘制左侧面板
 
         ImGui::SameLine(0.0f, 12.0f);
 
@@ -931,7 +938,7 @@ struct Example:
 
             util::BlueprintNodeBuilder builder(m_HeaderBackground, GetTextureWidth(m_HeaderBackground), GetTextureHeight(m_HeaderBackground));
 
-            for (auto& node : m_Nodes)
+			for (auto& node : m_Nodes) // 处理Blueprint以及Simple类型的节点（Simple： 小于号的那个节点和message的那个节点是simple的）
             {
                 if (node.Type != NodeType::Blueprint && node.Type != NodeType::Simple)
                     continue;
@@ -940,11 +947,11 @@ struct Example:
 
                 bool hasOutputDelegates = false;
                 for (auto& output : node.Outputs)
-                    if (output.Type == PinType::Delegate)
+					if (output.Type == PinType::Delegate) // 输出是否有委托类型的Pin（这个决定渲染方式是否特殊）
                         hasOutputDelegates = true;
 
                 builder.Begin(node.ID);
-                    if (!isSimple)
+                    if (!isSimple) // 只有非simple的节点才会有header
                     {
                         builder.Header(node.Color);
                             ImGui::Spring(0);
@@ -953,32 +960,34 @@ struct Example:
                             ImGui::Dummy(ImVec2(0, 28));
                             if (hasOutputDelegates)
                             {
-                                ImGui::BeginVertical("delegates", ImVec2(0, 28));
-                                ImGui::Spring(1, 0);
+								ImGui::BeginVertical("delegates", ImVec2(0, 28)); // 如果有多个委托类型的Pin，那么会在header中绘制一个垂直布局的区域来放置这些委托类型的Pin
+                                ImGui::Spring(1, 0); // spring的第二个参数是最低宽度值space，默认是-1（使用默认的最小项目间隔），当然在这里指定了0
                                 for (auto& output : node.Outputs)
                                 {
                                     if (output.Type != PinType::Delegate)
                                         continue;
 
                                     auto alpha = ImGui::GetStyle().Alpha;
-                                    if (newLinkPin && !CanCreateLink(newLinkPin, &output) && &output != newLinkPin)
+									if (newLinkPin && !CanCreateLink(newLinkPin, &output) && &output != newLinkPin) // 如果正在通过从pin拉出线的方式试图连接其他引脚，那么这时通过CanCreateLink判断是否连接，然后修改透明度提示。后续与CanCreateLink有关的逻辑都类似
                                         alpha = alpha * (48.0f / 255.0f);
 
+                                    // [Start] 绘制Pin按钮与图标
                                     ed::BeginPin(output.ID, ed::PinKind::Output);
                                     ed::PinPivotAlignment(ImVec2(1.0f, 0.5f));
                                     ed::PinPivotSize(ImVec2(0, 0));
                                     ImGui::BeginHorizontal(output.ID.AsPointer());
-                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha); // 注意这里的style的alpha用的是前面的alpha，也就是说如果设置透明会影响这里
                                     if (!output.Name.empty())
                                     {
                                         ImGui::TextUnformatted(output.Name.c_str());
                                         ImGui::Spring(0);
                                     }
-                                    DrawPinIcon(output, IsPinLinked(output.ID), (int)(alpha * 255));
+                                    DrawPinIcon(output, IsPinLinked(output.ID), (int)(alpha * 255)); // 绘制图标
                                     ImGui::Spring(0, ImGui::GetStyle().ItemSpacing.x / 2);
                                     ImGui::EndHorizontal();
                                     ImGui::PopStyleVar();
                                     ed::EndPin();
+                                    // [End]
 
                                     //DrawItemRect(ImColor(255, 0, 0));
                                 }
@@ -991,7 +1000,7 @@ struct Example:
                         builder.EndHeader();
                     }
 
-                    for (auto& input : node.Inputs)
+                    for (auto& input : node.Inputs) // 输入引脚部分
                     {
                         auto alpha = ImGui::GetStyle().Alpha;
                         if (newLinkPin && !CanCreateLink(newLinkPin, &input) && &input != newLinkPin)
@@ -1001,7 +1010,7 @@ struct Example:
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
                         DrawPinIcon(input, IsPinLinked(input.ID), (int)(alpha * 255));
                         ImGui::Spring(0);
-                        if (!input.Name.empty())
+                        if (!input.Name.empty()) // 显示名字（注意绘制顺序，对于输出引脚来说这个要反过来）
                         {
                             ImGui::TextUnformatted(input.Name.c_str());
                             ImGui::Spring(0);
@@ -1015,7 +1024,7 @@ struct Example:
                         builder.EndInput();
                     }
 
-                    if (isSimple)
+					if (isSimple) // 如果是simple类型的节点，那么在输入引脚之后在居中部位会有一个文本标签
                     {
                         builder.Middle();
 
@@ -1037,7 +1046,7 @@ struct Example:
                         builder.Output(output.ID);
                         if (output.Type == PinType::String)
                         {
-                            static char buffer[128] = "Edit Me\nMultiline!";
+                            static char buffer[128] = "Edit Me\nMultiline!"; // 注意：这里显示多行实际上是有问题的，实际用的时候最好让他就一行了事
                             static bool wasActive = false;
 
                             ImGui::PushItemWidth(100.0f);
@@ -1069,7 +1078,7 @@ struct Example:
                 builder.End();
             }
 
-            for (auto& node : m_Nodes)
+			for (auto& node : m_Nodes) // 处理Tree类型的节点 (先跳过研究)
             {
                 if (node.Type != NodeType::Tree)
                     continue;
@@ -1222,7 +1231,7 @@ struct Example:
                 //ImGui::PopStyleVar();
             }
 
-            for (auto& node : m_Nodes)
+            for (auto& node : m_Nodes) // Houdini类型节点 (先跳过研究)
             {
                 if (node.Type != NodeType::Houdini)
                     continue;
@@ -1394,7 +1403,7 @@ struct Example:
                 //ImGui::PopStyleVar();
             }
 
-            for (auto& node : m_Nodes)
+            for (auto& node : m_Nodes) // Comment类型节点 （先跳过研究）
             {
                 if (node.Type != NodeType::Comment)
                     continue;
@@ -1457,8 +1466,10 @@ struct Example:
             for (auto& link : m_Links)
                 ed::Link(link.ID, link.StartPinID, link.EndPinID, link.Color, 2.0f);
 
-            if (!createNewNode)
+            if (!createNewNode) // 这个变量的变化是在上一帧做出的，也即如果上一帧处在createNewNode == true的状态那么下文不会执行
             {
+                // 如果上一帧没有创建新的节点，那么调用ed::BeginCreate，开始执行创建新节点的逻辑
+                // 只有当用户开始从pin拉出新线的时候，会开始调用下文内容
                 if (ed::BeginCreate(ImColor(255, 255, 255), 2.0f))
                 {
                     auto showLabel = [](const char* label, ImColor color)
@@ -1497,7 +1508,7 @@ struct Example:
                         {
                             if (endPin == startPin)
                             {
-                                ed::RejectNewItem(ImColor(255, 0, 0), 2.0f);
+                                ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                             }
                             else if (endPin->Kind == startPin->Kind)
                             {
@@ -1517,7 +1528,7 @@ struct Example:
                             else
                             {
                                 showLabel("+ Create Link", ImColor(32, 45, 32, 180));
-                                if (ed::AcceptNewItem(ImColor(128, 255, 128), 4.0f))
+                                if (ed::AcceptNewItem(ImColor(128, 255, 128), 4.0f)) // 接受用绿色
                                 {
                                     m_Links.emplace_back(Link(GetNextId(), startPinId, endPinId));
                                     m_Links.back().Color = GetIconColor(startPin->Type);
@@ -1549,6 +1560,7 @@ struct Example:
 
                 ed::EndCreate();
 
+				// 处理删除节点和链接的逻辑
                 if (ed::BeginDelete())
                 {
                     ed::NodeId nodeId = 0;
@@ -1579,10 +1591,11 @@ struct Example:
             ImGui::SetCursorScreenPos(cursorTopLeft);
         }
 
+        // [Start] 右键菜单处理逻辑相关
     # if 1
-        auto openPopupPosition = ImGui::GetMousePos();
+        auto openPopupPosition = ImGui::GetMousePos(); // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
         ed::Suspend();
-        if (ed::ShowNodeContextMenu(&contextNodeId))
+		if (ed::ShowNodeContextMenu(&contextNodeId)) // 三种上下文菜单，但是这三种类型是写死的。不过内容可以通过后文的BeginPopup展示。另一方面，也会使用contextNodeId等上下文有关变量指定是哪个节点的上下文菜单。
             ImGui::OpenPopup("Node Context Menu");
         else if (ed::ShowPinContextMenu(&contextPinId))
             ImGui::OpenPopup("Pin Context Menu");
@@ -1596,13 +1609,13 @@ struct Example:
         ed::Resume();
 
         ed::Suspend();
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8)); // 让内容与窗口边缘有点距离（8个像素）
         if (ImGui::BeginPopup("Node Context Menu"))
         {
             auto node = FindNode(contextNodeId);
 
             ImGui::TextUnformatted("Node Context Menu");
-            ImGui::Separator();
+            ImGui::Separator(); // 这个的用处是画一条线
             if (node)
             {
                 ImGui::Text("ID: %p", node->ID.AsPointer());
@@ -1658,9 +1671,9 @@ struct Example:
             ImGui::EndPopup();
         }
 
-        if (ImGui::BeginPopup("Create New Node"))
+        if (ImGui::BeginPopup("Create New Node")) // 右键空白区域时的逻辑
         {
-            auto newNodePostion = openPopupPosition;
+            auto newNodePostion = openPopupPosition; // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
             //ImGui::SetCursorScreenPos(ImGui::GetMousePosOnOpeningCurrentPopup());
 
             //auto drawList = ImGui::GetWindowDrawList();
@@ -1708,11 +1721,11 @@ struct Example:
             {
                 BuildNodes();
 
-                createNewNode = false;
+				createNewNode = false; // 如果成功创建了节点，那么就将createNewNode设为false
 
-                ed::SetNodePosition(node->ID, newNodePostion);
+                ed::SetNodePosition(node->ID, newNodePostion); // 在生成后调整位置
 
-                if (auto startPin = newNodeLinkPin)
+                if (auto startPin = newNodeLinkPin) // 判断是不是从某个节点的已有的pin拉出来的，如果是的话那么自动地寻找并连接第一个找到的能连接的pin
                 {
                     auto& pins = startPin->Kind == PinKind::Input ? node->Outputs : node->Inputs;
 
@@ -1736,11 +1749,11 @@ struct Example:
             ImGui::EndPopup();
         }
         else
-            createNewNode = false;
+			createNewNode = false; // 右键菜单的逻辑结束：强制设置为没有创建新节点的状态
         ImGui::PopStyleVar();
         ed::Resume();
     # endif
-
+        // [End]
 
     /*
         cubic_bezier_t c;
@@ -1812,13 +1825,13 @@ struct Example:
         //ImGui::ShowMetricsWindow();
     }
 
-    int                  m_NextId = 1;
+    int                  m_NextId = 1; // （创建节点时使用）取得下一个要创建的节点的id
     const int            m_PinIconSize = 24;
-    std::vector<Node>    m_Nodes;
-    std::vector<Link>    m_Links;
-    ImTextureID          m_HeaderBackground = nullptr;
-    ImTextureID          m_SaveIcon = nullptr;
-    ImTextureID          m_RestoreIcon = nullptr;
+    std::vector<Node>    m_Nodes;   // 节点列表
+    std::vector<Link>    m_Links;   // 连接关系列表
+    ImTextureID          m_HeaderBackground = nullptr; // 背景贴图
+    ImTextureID          m_SaveIcon = nullptr;  // 保存的图标贴图
+    ImTextureID          m_RestoreIcon = nullptr; // 恢复按钮的图标贴图
     const float          m_TouchTime = 1.0f;
     std::map<ed::NodeId, float, NodeIdLess> m_NodeTouchTime;
     bool                 m_ShowOrdinals = false;
