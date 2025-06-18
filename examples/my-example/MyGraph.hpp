@@ -1,4 +1,5 @@
-#define IMGUI_DEFINE_MATH_OPERATORS
+#pragma once
+
 #include <application.h>
 #include "utilities/builders.h"
 #include "utilities/widgets.h"
@@ -19,7 +20,8 @@
 #include "components/Node.hpp"
 #include "components/Link.hpp"
 
-#include "MyGraph.hpp"
+
+namespace MyGraph{
 
 namespace ed = ax::NodeEditor;
 namespace util = ax::NodeEditor::Utilities;
@@ -28,13 +30,29 @@ using namespace ax;
 
 using ax::Widgets::IconType;
 
-
-int Main(int argc, char** argv)
+struct MyGraph:
+    public Application
 {
-    MyGraph::MyGraph mygraph("MyGraph", argc, argv);
+    using Application::Application;
 
-    if (mygraph.Create())
-        return mygraph.Run();
+    MyGraph(const char* name, int argc, char** argv): Application(name, argc, argv), myGraphName(name)
+    {
+    }
 
-    return 0;
+    void SaveGraphData();
+
+    void LoadGraphData();
+    
+    void OnStart() override ;
+
+    void OnStop() override;
+
+    void OnFrame(float deltaTime) override ;
+
+    ed::EditorContext* editorContext = nullptr;
+    std::string myGraphName;
+
+};
+
+
 }

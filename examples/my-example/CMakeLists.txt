@@ -6,4 +6,11 @@ add_example_executable(my-example
     utilities/builders.cpp
     utilities/drawing.cpp
     utilities/widgets.cpp
+    components/Link.hpp
+    components/Node.hpp
+    components/NodeType.hpp
+    components/Pin.hpp
+    components/PinType.hpp
+    MyGraph.hpp
+    MyGraph.cpp
 )
