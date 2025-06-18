@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <utility>
 
@@ -42,6 +43,10 @@ struct MyGraph:
     void SaveGraphData();
 
     void LoadGraphData();
+
+    void LoadTextures();
+
+    void ReleaseTextures();
     
     void OnStart() override ;
 
@@ -51,6 +56,19 @@ struct MyGraph:
 
     ed::EditorContext* editorContext = nullptr;
     std::string myGraphName;
+
+    std::map<unsigned int, NodeClass> nodeClassMap;
+    std::map<unsigned int, PinClass> pinClassMap;
+
+    std::map<unsigned int, NodeInstace> nodeInstaceMap;
+    std::map<unsigned int, PinInstance> pinInstaceMap;
+
+    std::map<std::pair<unsigned int, unsigned int>, Link> linkMap;
+
+    // 贴图
+    ImTextureID textureHeaderBackground;
+    ImTextureID textureSaveIcon;
+    ImTextureID textureRestoreIcon;
 
 };
 
