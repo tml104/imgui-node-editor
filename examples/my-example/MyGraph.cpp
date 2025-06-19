@@ -272,7 +272,25 @@ void MyGraph::MyGraph::SaveGraphData()
 
 void MyGraph::MyGraph::OnStart(){
     ed::Config config;
-    config.SettingsFile = (myGraphName+".json").c_str();
+    // config.SettingsFile = (myGraphName+".json").c_str(); // 注意不能这么写，因为内存生命周期的问题
+
+    config.SettingsFile = "MyGraph.json";
+    config.UserPointer = this;
+
+    config.SaveNodeSettings = [](ed::NodeId nodeId, const char* data, size_t size, ed::SaveReasonFlags reason, void* userPointer) -> bool {
+        auto self = static_cast<MyGraph*>(userPointer);
+        
+        auto it = self->nodeInstaceMap.find(nodeId.Get());
+
+        if(it != self->nodeInstaceMap.end()){
+            it->second.location = ed::GetNodePosition(nodeId);
+
+            return true;
+        }
+
+        return false;
+    };
+
     editorContext = ed::CreateEditor(&config);
     ed::SetCurrentEditor(editorContext);
 
