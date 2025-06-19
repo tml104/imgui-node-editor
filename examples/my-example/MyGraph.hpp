@@ -47,6 +47,12 @@ struct MyGraph:
     void LoadTextures();
 
     void ReleaseTextures();
+
+    bool IsPinLinked(ed::PinId pin_instance_id);
+
+    void DrawPinIcon(const PinClass& pin_class, bool is_connected, int alpha);
+
+    void DrawNode(util::BlueprintNodeBuilder& builder, const NodeClass& node_class, const NodeInstace& node_instance);
     
     void OnStart() override ;
 
