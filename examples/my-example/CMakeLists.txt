@@ -11,6 +11,7 @@ add_example_executable(my-example
     components/NodeType.hpp
     components/Pin.hpp
     components/PinType.hpp
+    components/PinType.cpp
     MyGraph.hpp
     MyGraph.cpp
 )

@@ -21,13 +21,14 @@ using json = nlohmann::json;
 namespace ed = ax::NodeEditor;
 namespace util = ax::NodeEditor::Utilities;
 
+using ull = unsigned long long;
 struct PinClass{
-    unsigned int classId;
+    ull classId;
     std::string name;
     PinType pinType;
     PinKind pinKind;
 
-    PinClass(unsigned int class_id, const char* name, PinType pin_type, PinKind pin_kind)
+    PinClass(ull class_id, const char* name, PinType pin_type, PinKind pin_kind)
     : classId(class_id), name(name), pinType(pin_type), pinKind(pin_kind)
     {
         
@@ -52,12 +53,12 @@ struct PinClass{
 struct PinInstance{
 
     ed::PinId   instanceId;
-    unsigned int classId;
-    unsigned int nodeInstanceId;
+    ull classId;
+    ull nodeInstanceId;
 
     PinInstance() {}
 
-    PinInstance(unsigned int instance_id, unsigned int class_id, unsigned int node_instance_id):
+    PinInstance(ull instance_id, ull class_id, ull node_instance_id):
         instanceId(instance_id), classId(class_id), nodeInstanceId(node_instance_id)
     {
         

@@ -1,5 +1,6 @@
 #include "MyGraph.hpp"
 #include <fstream>
+#include <imgui_internal.h>
 
 static inline ImRect ImGui_GetItemRect()
 {
@@ -47,21 +48,27 @@ void MyGraph::MyGraph::LoadGraphData()
     json instances_j;
     instance_f >> instances_j;
 
-    for(auto&& node_instance: instances_j["NodeInstaces"]){
+    maxId = 0;
+
+    for(auto&& node_instance: instances_j["NodeInstances"]){
         NodeInstace new_node_instance(node_instance);
 
         nodeInstaceMap[new_node_instance.instanceId.Get()] = new_node_instance;
+        maxId = std::max(maxId, new_node_instance.instanceId.Get());
     }
 
-    for(auto&& pin_instance: instances_j["PinInstaces"]){
+    for(auto&& pin_instance: instances_j["PinInstances"]){
         PinInstance new_pin_instace(pin_instance);
 
         pinInstaceMap[new_pin_instace.instanceId.Get()] = new_pin_instace;
+        maxId = std::max(maxId, new_pin_instace.instanceId.Get());
     }
 
     for(auto&& link_instace: instances_j["Links"]){
         Link new_link(link_instace);
         linkMap[std::make_pair(new_link.startPinInstanceId.Get(), new_link.endPinInstanceId.Get())] = new_link;
+
+        maxId = std::max(maxId, new_link.linkId.Get());
     }
 
 }
@@ -87,6 +94,24 @@ void MyGraph::MyGraph::ReleaseTextures()
     releaseTexture(textureHeaderBackground);
     releaseTexture(textureSaveIcon);
     releaseTexture(textureRestoreIcon);
+}
+
+void MyGraph::MyGraph::ShowLabel(const char *label, ImColor color)
+{
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetTextLineHeight());
+    auto size = ImGui::CalcTextSize(label);
+
+    auto padding = ImGui::GetStyle().FramePadding;
+    auto spacing = ImGui::GetStyle().ItemSpacing;
+
+    ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(spacing.x, -spacing.y));
+
+    auto rectMin = ImGui::GetCursorScreenPos() - padding;
+    auto rectMax = ImGui::GetCursorScreenPos() + size + padding;
+
+    auto drawList = ImGui::GetWindowDrawList();
+    drawList->AddRectFilled(rectMin, rectMax, color, size.y * 0.15f);
+    ImGui::TextUnformatted(label);
 }
 
 bool MyGraph::MyGraph::IsPinLinked(ed::PinId pin_instance_id)
@@ -140,7 +165,7 @@ void MyGraph::MyGraph::DrawNode(
     if(node_class.nodeType != NodeType::Simple){
         builder.Header(node_class.color);
 
-        ImGui::Spring(1);
+        ImGui::Spring(0);
         ImGui::TextUnformatted(node_class.name.c_str());
         ImGui::Spring(1);
         ImGui::Dummy(ImVec2(0, 28));
@@ -219,14 +244,18 @@ void MyGraph::MyGraph::OnStart(){
     ed::Config config;
     config.SettingsFile = (myGraphName+".json").c_str();
     editorContext = ed::CreateEditor(&config);
+    ed::SetCurrentEditor(editorContext);
 
     LoadGraphData();
-
     // 加载贴图
     LoadTextures();
 }
 
 void MyGraph::MyGraph::OnStop(){
+    SaveGraphData();
+
+    // 释放贴图
+    ReleaseTextures();
 
     if (editorContext)
     {
@@ -234,10 +263,6 @@ void MyGraph::MyGraph::OnStop(){
         editorContext = nullptr;
     }
 
-    SaveGraphData();
-
-    // 释放贴图
-    ReleaseTextures();
 }
 
 
@@ -249,6 +274,11 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
     ImGui::Separator();
 
     ed::SetCurrentEditor(editorContext);
+
+    // 右键菜单会用到的三个与右键时上下文有关的变量
+    static ed::NodeId context_node_id      = 0;
+    static ed::LinkId context_link_id      = 0;
+    static ed::PinId  context_pin_id       = 0;
 
     static bool is_create_new_node = false;
 
@@ -277,13 +307,91 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
         if(!is_create_new_node){ // 这个变量的变化是在上一帧做出的，也即如果上一帧处在createNewNode == true的状态那么下文不会执行
             // 如果上一帧没有创建新的节点，那么调用ed::BeginCreate，开始执行创建新节点的逻辑
             // 只有当用户开始从pin拉出新线的时候，会开始调用下文内容
-            
+
             if (ed::BeginCreate(ImColor(255, 255, 255), 2.0f)){
 
+                ed::PinId start_pin_id = 0, end_pin_id = 0;
+
+                if (ed::QueryNewLink(&start_pin_id, &end_pin_id)){
+                    if(pinInstaceMap.count(start_pin_id.Get()) && pinInstaceMap.count(end_pin_id.Get())){
+                        auto start_pin_instance = pinInstaceMap.at(start_pin_id.Get());
+                        auto end_pin_instance = pinInstaceMap.at(end_pin_id.Get());
+                        auto start_pin_class = pinClassMap.at(start_pin_instance.classId);
+                        auto end_pin_class = pinClassMap.at(end_pin_instance.classId);
+
+                        if(start_pin_class.pinKind == PinKind::Input && end_pin_class.pinKind == PinKind::Output){
+                            std::swap(start_pin_instance, end_pin_instance);
+                            std::swap(start_pin_class, end_pin_class);
+                            std::swap(start_pin_id, end_pin_id);
+                        }
+
+                        if(start_pin_id == end_pin_id){
+                            ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
+                        }
+                        else if(start_pin_class.pinType != end_pin_class.pinType){
+                            ShowLabel("x: 不兼容的类型", ImColor(45, 32, 32, 180));
+                            ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
+                        }
+                        else if(start_pin_class.pinKind == end_pin_class.pinKind){
+                            ShowLabel("x: 输入未与输出连接", ImColor(45, 32, 32, 180));
+                            ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
+                        }
+                        else{
+                            ShowLabel("+: 创建连接", ImColor(32, 45, 32, 180));
+                            if (ed::AcceptNewItem(ImColor(128, 255, 128), 4.0f)) // 接受用绿色
+                            {
+                                Link new_link{++maxId, start_pin_id, end_pin_id};
+                                linkMap[std::make_pair(start_pin_id.Get(), end_pin_id.Get())] = new_link;
+                            }
+
+                        }
+
+                    }
+                }
+
+                ed::PinId new_node_pin_id;
+                if(ed::QueryNewNode(&new_node_pin_id)){
+                    // TODO: 创建新节点
+                }
             }
             else{
                 
             }
+
+            ed::EndCreate();
+
+            if (ed::BeginDelete()){
+                ed::NodeId node_id = 0;
+                while(ed::QueryDeletedNode(&node_id)){
+                    if(ed::AcceptDeletedItem()){
+
+                        // 删除Pin，然后删除对应的Node
+
+                        auto node_instance = nodeInstaceMap.at(node_id.Get());
+
+                        for(auto& input_pin_id: node_instance.inputPinsInstaceId){
+                            pinInstaceMap.erase(input_pin_id.Get());
+                        }
+
+                        for(auto& output_pin_id: node_instance.outputPinsInstaceId){
+                            pinInstaceMap.erase(output_pin_id.Get());
+                        }
+
+                        nodeInstaceMap.erase(node_id.Get());
+                    }
+                }
+
+                ed::LinkId link_id = 0;
+                while(ed::QueryDeletedLink(&link_id)){
+                    if(ed::AcceptDeletedItem()){
+                        auto it = std::find_if(linkMap.begin(), linkMap.end(), [link_id](auto& p){return p.second.linkId == link_id;});
+                        if(it != linkMap.end()){
+                            linkMap.erase(it);
+                        }
+                    }
+                }
+            }
+            ed::EndDelete();
 
         }
 
@@ -293,5 +401,5 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
     ed::End();
 
 
-    ed::SetCurrentEditor(nullptr);
+    // ed::SetCurrentEditor(nullptr);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <application.h>
 #include "utilities/builders.h"
 #include "utilities/widgets.h"
@@ -31,6 +32,8 @@ using namespace ax;
 
 using ax::Widgets::IconType;
 
+using ull = unsigned long long;
+
 struct MyGraph:
     public Application
 {
@@ -48,6 +51,8 @@ struct MyGraph:
 
     void ReleaseTextures();
 
+    void ShowLabel(const char* label, ImColor color);
+
     bool IsPinLinked(ed::PinId pin_instance_id);
 
     void DrawPinIcon(const PinClass& pin_class, bool is_connected, int alpha);
@@ -63,13 +68,16 @@ struct MyGraph:
     ed::EditorContext* editorContext = nullptr;
     std::string myGraphName;
 
-    std::map<unsigned int, NodeClass> nodeClassMap;
-    std::map<unsigned int, PinClass> pinClassMap;
+    std::map<ull, NodeClass> nodeClassMap;
+    std::map<ull, PinClass> pinClassMap;
 
-    std::map<unsigned int, NodeInstace> nodeInstaceMap;
-    std::map<unsigned int, PinInstance> pinInstaceMap;
+    std::map<ull, NodeInstace> nodeInstaceMap;
+    std::map<ull, PinInstance> pinInstaceMap;
 
-    std::map<std::pair<unsigned int, unsigned int>, Link> linkMap;
+    std::map<std::pair<ull, ull>, Link> linkMap;
+    
+    // id 维护
+    ull maxId;
 
     // 贴图
     ImTextureID textureHeaderBackground;

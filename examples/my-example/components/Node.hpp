@@ -23,17 +23,18 @@ using json = nlohmann::json;
 namespace ed = ax::NodeEditor;
 namespace util = ax::NodeEditor::Utilities;
 
+using ull = unsigned long long;
 
 struct NodeClass{
-    unsigned int classId;
+    ull classId;
     NodeType nodeType;
     std::string name;
     ImColor color;
 
     ImVec2 Size; // 只对Comment类节点有用，ed::Group 会用到这个参数
 
-    std::vector<unsigned int> inputPinsClassId;
-    std::vector<unsigned int> outputPinsClassId;
+    std::vector<ull> inputPinsClassId;
+    std::vector<ull> outputPinsClassId;
 
     NodeClass() {}
 
@@ -85,11 +86,12 @@ struct NodeInstace{
     }
 
     void FromJson(const json& j){
-        instanceId = ed::NodeId(j["InstaceId"]);
+        instanceId = ed::NodeId(j["InstanceId"]);
         classId = j["ClassId"];
 
         if(j.contains("Location")){
             location = ImVec2(static_cast<int>(j["Location"][0]), static_cast<int>(j["Location"][1]));
+            ed::SetNodePosition(instanceId, location);
         }
 
         for(unsigned int element: j["InputPinsInstanceId"]){
