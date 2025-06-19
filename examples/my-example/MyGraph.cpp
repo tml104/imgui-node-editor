@@ -446,6 +446,40 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
         
         ImGui::SetCursorScreenPos(cursorTopLeft); // 恢复光标位置
     }
+
+    // 菜单
+    {
+        auto open_popup_pos = ImGui::GetMousePos(); // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
+
+        ed::Suspend();
+        
+        if(ed::ShowBackgroundContextMenu()){
+            ImGui::OpenPopup("Create New Node");
+        }
+        ed::Resume();
+
+        ed::Suspend();
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8)); // 让内容与窗口边缘有点距离（8个像素）
+
+        if (ImGui::BeginPopup("Create New Node")) // 右键空白区域时的逻辑
+        {
+            auto new_node_pos = open_popup_pos; // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
+
+            if(ImGui::MenuItem("123")){
+
+            }
+            ImGui::Separator();
+
+            if(ImGui::MenuItem("456")){
+
+            }
+            ImGui::EndPopup();
+        }
+
+        ImGui::PopStyleVar();
+        ed::Resume();
+    }
+
     ed::End();
 
 
