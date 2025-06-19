@@ -1,11 +1,38 @@
-.vs
-.vscode
-.build*
+# IDE 和系统文件
+.vs/
+.vscode/
 .DS_Store
-bin
-[Bb]uild
+
+# 其他构建产物或临时文件
+.build*/       # 例如 .build-debug/ 这样的目录
+bin/           # 项目根目录下的 bin 文件夹
+
+# Visual Studio 相关文件
 *.VC.db
 *.VC.opendb
 *.user
 *.ini
+
+# 首先设置通用的 JSON 文件忽略规则
+# 后续针对特定文件的 ! (不忽略) 规则会覆盖此规则
 *.json
+
+# --- 针对 build/bin/ 目录下特定 JSON 文件的修改 ---
+# 重要：原有的 `[Bb]uild` 规则需要被移除或注释掉。
+# 下面的规则将替代它，以便能够取消忽略目录内的特定文件。
+
+# 1. 忽略 'build/' 或 'Build/' 目录下的所有内容（文件和子目录）
+[Bb]uild/*
+
+# 2. 但是，不要忽略 'build/bin/' 或 'Build/bin/' 这个子目录本身。
+#    这样 Git 才能进入这个目录去查看其内容。
+![Bb]uild/bin/
+
+# 3. 然后，忽略 'build/bin/' 或 'Build/bin/' 子目录下的所有内容。
+[Bb]uild/bin/*
+
+# 4. 最后，取消忽略这两个特定的 JSON 文件。
+#    这些规则会覆盖上面更通用的 '[Bb]uild/bin/*' 和 '*.json' 规则。
+![Bb]uild/bin/MyGraphClasses.json
+![Bb]uild/bin/MyGraphInstances.json
+# --- 修改结束 ---

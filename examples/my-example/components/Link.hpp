@@ -48,6 +48,22 @@ struct Link
             static_cast<int>(j["Color"][2])
         );
     }
+
+    json ToJson(){
+        json j;
+
+        j["LinkId"] = linkId.Get();
+        j["StartPinInstanceId"] = startPinInstanceId.Get();
+        j["EndPinInstanceId"] = endPinInstanceId.Get();
+
+        j["Color"] = std::vector<int>{
+            static_cast<int>(color.Value.x * 255.0), 
+            static_cast<int>(color.Value.y * 255.0), 
+            static_cast<int>(color.Value.z * 255.0)
+        };
+
+        return j;
+    }
 };
 
 }

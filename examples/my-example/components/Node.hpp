@@ -104,6 +104,44 @@ struct NodeInstace{
 
     }
 
+    json ToJson(){
+        json j;
+
+        j["InstanceId"] = instanceId.Get();
+        j["ClassId"] = classId;
+
+        j["Location"] = std::vector<int>{
+            static_cast<int>(location.x),
+            static_cast<int>(location.y)
+        };
+
+        std::vector<ull> pins_vec;
+        std::transform(
+            inputPinsInstaceId.begin(), 
+            inputPinsInstaceId.end(), 
+            std::back_inserter(pins_vec), 
+            [](const ed::PinId& pin_id){
+                return pin_id.Get();
+            }
+        );
+
+        j["InputPinsInstanceId"] = pins_vec;
+
+        pins_vec.clear();
+        std::transform(
+            outputPinsInstaceId.begin(), 
+            outputPinsInstaceId.end(), 
+            std::back_inserter(pins_vec), 
+            [](const ed::PinId& pin_id){
+                return pin_id.Get();
+            }
+        );
+
+        j["OutputPinsInstanceId"] = pins_vec;
+
+        return j;
+    }
+
 };
 
 // struct Node{

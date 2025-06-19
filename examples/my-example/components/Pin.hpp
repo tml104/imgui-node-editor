@@ -73,6 +73,16 @@ struct PinInstance{
         classId = j["ClassId"];
         nodeInstanceId = j["NodeInstanceId"];
     }
+
+    json ToJson(){
+        json j;
+
+        j["InstanceId"] = instanceId.Get();
+        j["ClassId"] = classId;
+        j["NodeInstanceId"] = nodeInstanceId;
+
+        return j;
+    }
 };
 
 }

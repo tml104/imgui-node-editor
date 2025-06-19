@@ -1,0 +1,26 @@
+{
+    "NodeClasses":[
+        {
+            "ClassId": 1,
+            "NodeType": 1,
+            "Name": "Start",
+            "Color": [255, 0, 0],
+            "InputPinsClassId": [],
+            "OutputPinsClassId": [1, 2]
+        }
+    ],
+    "PinClasses":[
+        {
+            "ClassId": 1,
+            "PinType": 0,
+            "PinKind": 0,
+            "Name": ""
+        },
+        {
+            "ClassId": 2,
+            "PinType": 5,
+            "PinKind": 0,
+            "Name": "bodies"
+        }
+    ]
+}

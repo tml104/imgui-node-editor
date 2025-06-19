@@ -39,7 +39,11 @@ struct MyGraph:
 {
     using Application::Application;
 
-    MyGraph(const char* name, int argc, char** argv): Application(name, argc, argv), myGraphName(name)
+    MyGraph(const char* name, int argc, char** argv): 
+        Application(name, argc, argv), 
+        myGraphName(name),
+        myGraphClassesJson(myGraphName + "Classes.json"),
+        myGraphInstancesJson(myGraphName + "Instances.json")
     {
     }
 
@@ -66,7 +70,12 @@ struct MyGraph:
     void OnFrame(float deltaTime) override ;
 
     ed::EditorContext* editorContext = nullptr;
+
+    // 名字与文件名
     std::string myGraphName;
+    std::string myGraphClassesJson;
+    std::string myGraphInstancesJson;
+
 
     std::map<ull, NodeClass> nodeClassMap;
     std::map<ull, PinClass> pinClassMap;

@@ -19,7 +19,7 @@ static inline ImRect ImRect_Expanded(const ImRect& rect, float x, float y)
 
 void MyGraph::MyGraph::LoadGraphData()
 {
-    std::ifstream classes_f(myGraphName + "Classes.json");
+    std::ifstream classes_f(myGraphClassesJson);
 
     if(!classes_f.is_open()){
         return ;
@@ -39,7 +39,7 @@ void MyGraph::MyGraph::LoadGraphData()
         pinClassMap[new_pin_class.classId] = new_pin_class;
     }
 
-    std::ifstream instance_f(myGraphName + "Instances.json");
+    std::ifstream instance_f(myGraphInstancesJson);
 
     if(!instance_f.is_open()){
         return ;
@@ -235,9 +235,39 @@ void MyGraph::MyGraph::DrawNode(
 
 void MyGraph::MyGraph::SaveGraphData()
 {
-    // TODO: 导出到json中，写法与LoadGraphData中的类似
-    // 由于ToJson没写，所以暂时放一放
+    json j;
 
+    std::ofstream instance_f(myGraphInstancesJson, std::ofstream::out | std::ofstream::trunc); // 实际上默认模式就这样
+
+    if(!instance_f.is_open()){
+        return ;
+    }
+
+    std::vector<json> node_instance_json_vec;
+
+    for(auto& p: nodeInstaceMap){
+        node_instance_json_vec.emplace_back(p.second.ToJson());
+    }
+
+    j["NodeInstances"] = node_instance_json_vec;
+
+    std::vector<json> pin_instances_json_vec;
+
+    for(auto& p: pinInstaceMap){
+        pin_instances_json_vec.emplace_back(p.second.ToJson());
+    }
+
+    j["PinInstances"] = pin_instances_json_vec;
+
+    std::vector<json> link_json_vec;
+
+    for(auto& p: linkMap){
+        link_json_vec.emplace_back(p.second.ToJson());
+    }
+
+    j["Links"] = link_json_vec;
+
+    instance_f << j.dump(4);
 }
 
 void MyGraph::MyGraph::OnStart(){
@@ -329,15 +359,15 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
                             ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                         }
                         else if(start_pin_class.pinType != end_pin_class.pinType){
-                            ShowLabel("x: 不兼容的类型", ImColor(45, 32, 32, 180));
+                            ShowLabel("x: no compatible pin type", ImColor(45, 32, 32, 180));
                             ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                         }
                         else if(start_pin_class.pinKind == end_pin_class.pinKind){
-                            ShowLabel("x: 输入未与输出连接", ImColor(45, 32, 32, 180));
+                            ShowLabel("x: no compatible pin kind", ImColor(45, 32, 32, 180));
                             ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                         }
                         else{
-                            ShowLabel("+: 创建连接", ImColor(32, 45, 32, 180));
+                            ShowLabel("+: create new link", ImColor(32, 45, 32, 180));
                             if (ed::AcceptNewItem(ImColor(128, 255, 128), 4.0f)) // 接受用绿色
                             {
                                 Link new_link{++maxId, start_pin_id, end_pin_id};

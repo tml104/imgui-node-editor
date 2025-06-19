@@ -1,0 +1,30 @@
+{
+    "Links": [],
+    "NodeInstances": [
+        {
+            "ClassId": 1,
+            "InputPinsInstanceId": [],
+            "InstanceId": 1,
+            "Location": [
+                0,
+                0
+            ],
+            "OutputPinsInstanceId": [
+                2,
+                3
+            ]
+        }
+    ],
+    "PinInstances": [
+        {
+            "ClassId": 1,
+            "InstanceId": 2,
+            "NodeInstanceId": 1
+        },
+        {
+            "ClassId": 2,
+            "InstanceId": 3,
+            "NodeInstanceId": 1
+        }
+    ]
+}
