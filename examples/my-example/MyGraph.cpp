@@ -172,7 +172,7 @@ void MyGraph::MyGraph::DrawNode(
     if(node_class.nodeType != NodeType::Simple){
         builder.Header(node_class.color);
 
-        ImGui::Spring(0);
+        ImGui::Spring(1);
         ImGui::TextUnformatted(node_class.name.c_str());
         ImGui::Spring(1);
         ImGui::Dummy(ImVec2(0, 28));

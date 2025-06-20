@@ -43,7 +43,8 @@ struct MyGraph:
         Application(name, argc, argv), 
         myGraphName(name),
         myGraphClassesJson(myGraphName + "Classes.json"),
-        myGraphInstancesJson(myGraphName + "Instances.json")
+        myGraphInstancesJson(myGraphName + "Instances.json"),
+        maxId(0)
     {
     }
 

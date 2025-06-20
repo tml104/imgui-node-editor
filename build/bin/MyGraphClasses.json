@@ -7,6 +7,54 @@
             "Color": [255, 0, 0],
             "InputPinsClassId": [],
             "OutputPinsClassId": [1, 2]
+        },
+        {
+            "ClassId": 2,
+            "NodeType": 0,
+            "Name": "option_marknum_init中文",
+            "Color": [0, 255, 0],
+            "InputPinsClassId": [3, 5],
+            "OutputPinsClassId": [1]
+        },
+        {
+            "ClassId": 3,
+            "NodeType": 0,
+            "Name": "LoadEntityList",
+            "Color": [0, 255, 0],
+            "InputPinsClassId": [3, 4],
+            "OutputPinsClassId": [1, 6]
+        },
+        {
+            "ClassId": 4,
+            "NodeType": 0,
+            "Name": "option_solve_stitch_for_each_bodies",
+            "Color": [0, 255, 0],
+            "InputPinsClassId": [3, 5],
+            "OutputPinsClassId": [1, 6]
+        },
+        {
+            "ClassId": 5,
+            "NodeType": 0,
+            "Name": "option_solve_nonmanifold",
+            "Color": [0, 255, 0],
+            "InputPinsClassId": [3, 5],
+            "OutputPinsClassId": [1, 6]
+        },
+        {
+            "ClassId": 6,
+            "NodeType": 0,
+            "Name": "option_save_bodies_respectly",
+            "Color": [0, 0, 255],
+            "InputPinsClassId": [3, 5, 4],
+            "OutputPinsClassId": [1]
+        },
+        {
+            "ClassId": 7,
+            "NodeType": 0,
+            "Name": "option_export_geometry_json",
+            "Color": [0, 0, 255],
+            "InputPinsClassId": [3, 5, 4],
+            "OutputPinsClassId": [1]
         }
     ],
     "PinClasses":[
@@ -14,13 +62,37 @@
             "ClassId": 1,
             "PinType": 0,
             "PinKind": 0,
-            "Name": ""
+            "Name": "流出"
         },
         {
             "ClassId": 2,
+            "PinType": 4,
+            "PinKind": 0,
+            "Name": "output_file_path (String)"
+        },
+        {
+            "ClassId": 3,
+            "PinType": 0,
+            "PinKind": 1,
+            "Name": "流入"
+        },
+        {
+            "ClassId": 4,
+            "PinType": 4,
+            "PinKind": 1,
+            "Name": "input_file_path (String)"
+        },
+        {
+            "ClassId": 5,
+            "PinType": 5,
+            "PinKind": 1,
+            "Name": "input_bodies (ENTITY_LIST)"
+        },
+        {
+            "ClassId": 6,
             "PinType": 5,
             "PinKind": 0,
-            "Name": "bodies"
+            "Name": "output_bodies (ENTITY_LIST)"
         }
     ]
 }
