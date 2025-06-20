@@ -59,9 +59,11 @@ struct MyGraph:
 
     bool IsPinLinked(ed::PinId pin_instance_id);
 
+    void CreateNewNode(ull node_class_id, ImVec2 pos);
+
     void DrawPinIcon(const PinClass& pin_class, bool is_connected, int alpha);
 
-    void DrawNode(util::BlueprintNodeBuilder& builder, const NodeClass& node_class, const NodeInstace& node_instance);
+    void DrawNode(util::BlueprintNodeBuilder& builder, const NodeClass& node_class, const NodeInstance& node_instance);
     
     void OnStart() override ;
 
@@ -80,7 +82,7 @@ struct MyGraph:
     std::map<ull, NodeClass> nodeClassMap;
     std::map<ull, PinClass> pinClassMap;
 
-    std::map<ull, NodeInstace> nodeInstaceMap;
+    std::map<ull, NodeInstance> nodeInstaceMap;
     std::map<ull, PinInstance> pinInstaceMap;
 
     std::map<std::pair<ull, ull>, Link> linkMap;

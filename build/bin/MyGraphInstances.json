@@ -1,5 +1,53 @@
 {
     "Links": [],
-    "NodeInstances": [],
-    "PinInstances": []
+    "NodeInstances": [
+        {
+            "ClassId": 1,
+            "InputPinsInstanceId": [],
+            "InstanceId": 1,
+            "Location": [
+                -51,
+                -20
+            ],
+            "OutputPinsInstanceId": [
+                2,
+                3
+            ]
+        },
+        {
+            "ClassId": 1,
+            "InputPinsInstanceId": [],
+            "InstanceId": 7,
+            "Location": [
+                237,
+                128
+            ],
+            "OutputPinsInstanceId": [
+                8,
+                9
+            ]
+        }
+    ],
+    "PinInstances": [
+        {
+            "ClassId": 1,
+            "InstanceId": 2,
+            "NodeInstanceId": 1
+        },
+        {
+            "ClassId": 2,
+            "InstanceId": 3,
+            "NodeInstanceId": 1
+        },
+        {
+            "ClassId": 1,
+            "InstanceId": 8,
+            "NodeInstanceId": 7
+        },
+        {
+            "ClassId": 2,
+            "InstanceId": 9,
+            "NodeInstanceId": 7
+        }
+    ]
 }

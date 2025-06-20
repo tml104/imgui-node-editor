@@ -51,7 +51,7 @@ void MyGraph::MyGraph::LoadGraphData()
     maxId = 0;
 
     for(auto&& node_instance: instances_j["NodeInstances"]){
-        NodeInstace new_node_instance(node_instance);
+        NodeInstance new_node_instance(node_instance);
 
         nodeInstaceMap[new_node_instance.instanceId.Get()] = new_node_instance;
         maxId = std::max(maxId, new_node_instance.instanceId.Get());
@@ -124,6 +124,13 @@ bool MyGraph::MyGraph::IsPinLinked(ed::PinId pin_instance_id)
     return false;
 }
 
+void MyGraph::MyGraph::CreateNewNode(ull node_class_id, ImVec2 pos)
+{
+    auto new_node_class = nodeClassMap[node_class_id];
+    NodeInstance new_node_instance(new_node_class, pos, maxId, pinClassMap, pinInstaceMap);
+    nodeInstaceMap[new_node_instance.instanceId.Get()] = new_node_instance;
+}
+
 void MyGraph::MyGraph::DrawPinIcon(const PinClass &pin_class, bool is_connected, int alpha)
 {
     IconType iconType;
@@ -157,7 +164,7 @@ void MyGraph::MyGraph::DrawPinIcon(const PinClass &pin_class, bool is_connected,
 void MyGraph::MyGraph::DrawNode(
     util::BlueprintNodeBuilder& builder, 
     const NodeClass &node_class, 
-    const NodeInstace &node_instance)
+    const NodeInstance &node_instance)
 {
     builder.Begin(node_instance.instanceId);
 
@@ -465,6 +472,7 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
         {
             auto new_node_pos = open_popup_pos; // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
 
+            #if 0
             if(ImGui::MenuItem("123")){
 
             }
@@ -473,9 +481,17 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
             if(ImGui::MenuItem("456")){
 
             }
+            #endif
+            
+            for(auto& p: nodeClassMap){
+                if(ImGui::MenuItem(p.second.name.c_str())){
+                    CreateNewNode(p.second.classId, new_node_pos);
+                }
+            }
+
             ImGui::EndPopup();
         }
-
+        
         ImGui::PopStyleVar();
         ed::Resume();
     }

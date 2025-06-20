@@ -71,7 +71,7 @@ struct NodeClass{
     }
 };
 
-struct NodeInstace{
+struct NodeInstance{
     ed::NodeId instanceId;
     unsigned int classId;
     ImVec2 location;
@@ -79,9 +79,34 @@ struct NodeInstace{
     std::vector<ed::PinId> inputPinsInstaceId;
     std::vector<ed::PinId> outputPinsInstaceId;
 
-    NodeInstace() {}
+    NodeInstance() {}
 
-    NodeInstace(const json& j) {
+    NodeInstance(const NodeClass& node_class, ImVec2 pos, ull& max_id, 
+        std::map<ull, PinClass>& pin_class_map,
+        std::map<ull, PinInstance>& pin_instance_map
+    ) :
+        instanceId(++max_id), classId(node_class.classId), location(pos)
+    {
+        for(ull input_pin_class_id: node_class.inputPinsClassId){
+            auto pin_class = pin_class_map[input_pin_class_id];
+            PinInstance pin_instance(pin_class, instanceId.Get(), max_id);
+
+            pin_instance_map[pin_instance.instanceId.Get()] = pin_instance;
+            inputPinsInstaceId.emplace_back(pin_instance.instanceId);
+        }
+
+        for(ull output_pin_class_id: node_class.outputPinsClassId){
+            auto pin_class = pin_class_map[output_pin_class_id];
+            PinInstance pin_instance(pin_class, instanceId.Get(), max_id);
+
+            pin_instance_map[pin_instance.instanceId.Get()] = pin_instance;
+            outputPinsInstaceId.emplace_back(pin_instance.instanceId);
+        }
+
+        ed::SetNodePosition(instanceId, location);
+    }
+
+    NodeInstance(const json& j) {
         FromJson(j);
     }
 

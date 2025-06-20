@@ -64,6 +64,11 @@ struct PinInstance{
         
     }
 
+    PinInstance(const PinClass& pin_class, ull node_instance_id, ull& max_id):
+        nodeInstanceId(node_instance_id), instanceId(++max_id), classId(pin_class.classId)
+    {
+    }
+
     PinInstance(const json& j){
         FromJson(j);
     }
