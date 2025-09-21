@@ -17,6 +17,9 @@ static inline ImRect ImRect_Expanded(const ImRect& rect, float x, float y)
     return result;
 }
 
+/*
+    [OnStart] 从MyGraphClasses.json, MyGraphInstances.json中加载数据
+*/
 void MyGraph::MyGraph::LoadGraphData()
 {
     std::ifstream classes_f(myGraphClassesJson);
@@ -73,6 +76,9 @@ void MyGraph::MyGraph::LoadGraphData()
 
 }
 
+/*
+    [OnStart] 加载贴图数据，用于在图渲染的时候做（未来这个background之类的可能要改掉）
+*/
 void MyGraph::MyGraph::LoadTextures()
 {
     textureHeaderBackground = LoadTexture("data/BlueprintBackground.png");
@@ -80,6 +86,9 @@ void MyGraph::MyGraph::LoadTextures()
     textureRestoreIcon = LoadTexture("data/ic_restore_white_24dp.png");
 }
 
+/*
+    [OnStop] 在程序生命周期停止时，释放刚刚加载的贴图数据
+*/
 void MyGraph::MyGraph::ReleaseTextures()
 {
     auto releaseTexture = [this](ImTextureID& id)
@@ -96,6 +105,9 @@ void MyGraph::MyGraph::ReleaseTextures()
     releaseTexture(textureRestoreIcon);
 }
 
+/*
+
+*/
 void MyGraph::MyGraph::ShowLabel(const char *label, ImColor color)
 {
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetTextLineHeight());
@@ -339,7 +351,7 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
 
     ed::Begin("Node editor");
     {
-        auto cursorTopLeft = ImGui::GetCursorScreenPos(); // 保存光标位置
+        ImVec2 cursorTopLeft = ImGui::GetCursorScreenPos(); // 保存光标位置
 
         util::BlueprintNodeBuilder builder(
             textureHeaderBackground, 
@@ -374,26 +386,28 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
                         auto start_pin_class = pinClassMap.at(start_pin_instance.classId);
                         auto end_pin_class = pinClassMap.at(end_pin_instance.classId);
 
+                        // 输入输出类型相反时，交换一下start_pin和end_pin，以便处理
                         if(start_pin_class.pinKind == PinKind::Input && end_pin_class.pinKind == PinKind::Output){
                             std::swap(start_pin_instance, end_pin_instance);
                             std::swap(start_pin_class, end_pin_class);
                             std::swap(start_pin_id, end_pin_id);
                         }
 
-                        if(start_pin_id == end_pin_id){
+                       
+                        if(start_pin_id == end_pin_id){ // 排除：起终pin相同
                             ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                         }
-                        else if(start_pin_class.pinType != end_pin_class.pinType){
+                        else if(start_pin_class.pinType != end_pin_class.pinType){ // 排除：起终类型不同
                             ShowLabel("x: no compatible pin type", ImColor(45, 32, 32, 180));
                             ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                         }
-                        else if(start_pin_class.pinKind == end_pin_class.pinKind){
+                        else if(start_pin_class.pinKind == end_pin_class.pinKind){ // 排除：起终的类型不是一个输入一个输出
                             ShowLabel("x: no compatible pin kind", ImColor(45, 32, 32, 180));
                             ed::RejectNewItem(ImColor(255, 0, 0), 2.0f); // 拒绝用红色，下同
                         }
-                        else{
+                        else{ // 情况合法，创建连接
                             ShowLabel("+: create new link", ImColor(32, 45, 32, 180));
-                            if (ed::AcceptNewItem(ImColor(128, 255, 128), 4.0f)) // 接受用绿色
+                            if (ed::AcceptNewItem(ImColor(128, 255, 128), 4.0f)) // 接受用绿色（松手时创建连接）
                             {
                                 Link new_link{++maxId, start_pin_id, end_pin_id};
                                 linkMap[std::make_pair(start_pin_id.Get(), end_pin_id.Get())] = new_link;
@@ -406,12 +420,10 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
 
                 ed::PinId new_node_pin_id;
                 if(ed::QueryNewNode(&new_node_pin_id)){
-                    // TODO: 创建新节点
+                    // TODO: 创建新节点，暂时不用这个功能来创建新节点
                 }
             }
-            else{
-                
-            }
+            // 本来这里有个else 处理 newLinkPin = nullptr 的，但是因为这个变量现在没有了所以就删了
 
             ed::EndCreate();
 
@@ -456,7 +468,7 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
 
     // 菜单
     {
-        auto open_popup_pos = ImGui::GetMousePos(); // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
+        ImVec2 open_popup_pos = ImGui::GetMousePos(); // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
 
         ed::Suspend();
         
@@ -470,7 +482,7 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
 
         if (ImGui::BeginPopup("Create New Node")) // 右键空白区域时的逻辑
         {
-            auto new_node_pos = open_popup_pos; // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
+            ImVec2 new_node_pos = open_popup_pos; // 这个只是用来控制通过右键菜单创建新的节点时，新节点的位置
 
             #if 0
             if(ImGui::MenuItem("123")){
@@ -484,7 +496,8 @@ void MyGraph::MyGraph::OnFrame(float deltaTime){
             #endif
             
             for(auto& p: nodeClassMap){
-                if(ImGui::MenuItem(p.second.name.c_str())){
+                // PS: 这里可以使用 ImGui::Separator() 分隔菜单中各个项
+                if(ImGui::MenuItem(p.second.name.c_str())){ // 当点击菜单中对应项时，创建新节点
                     CreateNewNode(p.second.classId, new_node_pos);
                 }
             }
